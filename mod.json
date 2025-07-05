@@ -29,7 +29,10 @@
 	"priority": 0,
 	"compatibility": {
 		"class": "all",
-		"entries": {}
+		"entries": {},
+		"requires": [
+			"Era Erm Framework"
+		]
 	},
 	"platform": "era",
 	"info_version": "2.0",
