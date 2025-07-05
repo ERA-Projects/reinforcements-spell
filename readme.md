@@ -18,7 +18,7 @@ This spell allows heroes to summon creatures from town garrisons directly to the
 - Daily usage limit applies per hero
 
 ## Installation
-1. Extract the mod files to your Heroes III ERA installation directory
+1. Download via Mod Browser or Extract the mod files to your Heroes III ERA/Mods/ installation directory
 2. Enable the mod in the Mod Manager
 3. Start a new game to use the spell
 
@@ -27,4 +27,4 @@ This spell allows heroes to summon creatures from town garrisons directly to the
 - Compatible with most other ERA mods
 
 ## About Development
-This mod was created by **daemon_n** commissioned by **Shimmy2** to enhance the Heroes of Might and Magic III gaming experience.
+This mod was created by **daemon_n** commissioned by **ShimmY** to enhance the Heroes of Might and Magic III gaming experience.
