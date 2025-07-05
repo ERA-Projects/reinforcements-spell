@@ -1,0 +1,351 @@
+ZVSE2
+
+
+!?FU(OnStartOrLoad);
+  !!SN:L^EraPlugins\erm_hooker.era^/?y1;
+
+  !!if&y1<>0;
+    !!SN:Ay1/^SetHook^/?y2;
+    !!FU(rei_CreateERMHook):Py2;
+  !!en;
+
+!?FU(rei_CreateERMHook);
+
+  !!SN:Ex1/1/4310970/(rei_OnCastingDisguise);0041C7BA
+  !!SN:Ex1/1/4315531/(rei_BeforeTownPortal);
+
+
+!?FU(rei_Initializtion);
+    !!SS(REI_SUMMON_SPELL_ID):L3 S(SPELL_SCHOOL_FIRE);                                                             [set level and school]
+    !!VR(cost:y):S(REI_SUMMON_SPELL_COST);                                                                         [set base cost]
+    !!SN:H^spell^/(REI_SUMMON_SPELL_ID)/(SPELL_TEXT_SHORT_NAME)/^%T(rei.spell.name.short)^;
+    !!SN:H^spell^/(REI_SUMMON_SPELL_ID)/(SPELL_TEXT_NAME)/^%T(rei.spell.name.full)^;
+
+    !!re i/0/(SKILL_EXPERT);
+      !!SS(REI_SUMMON_SPELL_ID):Ci/(cost);                                                                         [set level cost]
+      !!VR(textType:y):Si +(SPELL_TEXT_DESCR);
+      !!SN:T^rei.spell.description.%i^/?(description:z) H^spell^/(REI_SUMMON_SPELL_ID)/(textType)/(description:z); [set new description]
+      !!VR(cost):-1;
+    !!en;
+
+!#FU(rei_Initializtion):P;
+
+!?FU(rei_SummonDlg_Init);
+!#VA(dlgId:x) (heroId:x) (town:x) (result:x);
+    !!VR(dlgName:z):S^MoPDlg020.txt^;
+    !!FU(gem_DlgReload):P(dlgName:z);
+    !!DL(dlgId:x):N(dlgName:z); // load actual dlg
+    !!if&-1;
+        !!IF:M^ERROR: Failed to load dlg^;
+        !!FU:E;
+    !!en;
+
+
+    // init global vars
+    !!VRi^rei_bottom_hero_id^:S(heroId);
+    !!UN:C(town)/12/4/?i^rei_top_hero_id^;
+
+    !!VRi^rei_town_struct^:S(town);
+
+    !!VRi^rei_transfer_last_stack^:S(FALSE);
+    !!UN:C5968202/-1/?(opCode:y);
+    !!if&(opCode)<>117;
+        !!VRi^rei_transfer_last_stack^:S(TRUE);
+    !!en;
+    !!FU(rei_SummonDlg_ResetClickedArmy):P;
+
+    !!UN:C(town)/1/?(townId:y);
+    !!VRi^rei_town_id^:S(townId);
+    !!CA0/(townId):N?(townName:z) R?(cantBuild:y) T?(townType:y);
+
+    // hide extra items
+    !!if&i^rei_top_hero_id^<>(NO_HERO);
+        !!FU(rei_SummonDlg_SetDlgItemVisablity):P(REI_DLG_TOWN_DEF_ITEM_ID)/(FALSE)/(TRUE);
+    !!el;
+        !!VR(defFrameId:y):S(townType) *2 +(cantBuild);
+        !!DL(dlgId):A(REI_DLG_TOWN_DEF_ITEM_ID)/(DLG_CMD_SET_DEF_FRAME)/(defFrameId)/0;
+        !!FU(rei_SummonDlg_SetDlgItemVisablity):P(REI_DLG_TOP_HERO_PCX_ITEM_ID)/(FALSE)/(TRUE);
+    !!en;
+
+
+
+    // set dlg text
+    !!SN:T^rei.dlg.header^/?(header:z)/^townName^/(townName);
+    !!DLx1:A45/(DLG_CMD_SET_TEXT)/(header:z)/0;
+    !!DLx1:E(REI_DLG_SELECTION_FRAME_ID)/0;disable clicked frame
+
+
+    // set armies
+    !!FU(rei_SummonDlg_GarrisonInterface_Redraw):P(dlgId);
+    !!FU(rei_SummonDlg_VisiterInterface_Redraw):P(dlgId);
+
+
+
+!?FU(OnCustomDialogEvent)&x1=(REI_SUMMON_DLG_ID)/i^mouse_action^<>(MOUSE_LMB_RELEASED);
+
+// show hero dlg
+!!if|i^mouse_item^=(REI_DLG_BOTTOM_HERO_PCX_ITEM_ID)/i^mouse_item^=(REI_DLG_TOP_HERO_PCX_ITEM_ID);
+    
+    !!if&i^mouse_item^=(REI_DLG_TOP_HERO_PCX_ITEM_ID);
+        !!SN:E5118576/(CALLCONV_FASTCALL)/i^rei_top_hero_id^/1/1/(FALSE);
+        !!FU(rei_SummonDlg_GarrisonInterface_Redraw):Px1;
+    !!el;
+        !!SN:E5118576/(CALLCONV_FASTCALL)/i^rei_bottom_hero_id^/1/1/(FALSE);
+        !!FU(rei_SummonDlg_VisiterInterface_Redraw):Px1;/i^rei_bottom_hero_id^;
+    !!en;
+
+    !!FU(rei_SummonDlg_ResetClickedArmy):P;
+!!el&i^mouse_item^=(REI_DLG_TOWN_DEF_ITEM_ID)/i^mouse_action^=(MOUSE_RMB_PRESSED);
+    
+    // Show town right click dlg
+    !!SN:B?z2/?(buffer:y);
+    !!SN:E5441024/(CALLCONV_THISCALL)/(buffer)/i^rei_town_struct^/3;;
+    !!SN:E6245264/(CALLCONV_THISCALL)/(buffer);
+    !!SN:E5443072/(CALLCONV_THISCALL)/(buffer);
+
+!!el&i^mouse_item^>=(REI_DLG_TOP_ARMY_DLG_ITEM_ID_FIRST)/i^mouse_item^<=(REI_DLG_BOTTOM_ARMY_DLG_ITEM_ID_LAST);|i^mouse_item^=(REI_DLG_SELECTION_FRAME_ID);
+    
+    *!VR(clickedSlotId:y):Si^mouse_item^ -1;
+
+    !!VR(vItemId:y):Si^mouse_item^ -1;
+
+    !!VR(isBottom:y):S(vItemId:y) :(REI_DLG_TOP_ARMY_DLG_ITEMS_AMOUNT);
+
+    !!VR(armySlotId:y):S(vItemId:y) :3; (armyIndex) *
+    !!VR(armyClickSlotId:y):S(armySlotId:y)+1; 
+    !!if&(armySlotId)>6;
+        !!VR(armySlotId):-7;
+    !!en;
+
+    !!if&i^mouse_action^=(MOUSE_LMB_PRESSED);
+        !!if&i^rei_dlg_last_army_slot_id_clicked^=(armyClickSlotId:y);
+            !!FU(rei_SummonDlg_ShowCreatureDlg):P(isBottom)/(armySlotId)/(FALSE);
+            !!if&(isBottom);
+                !!FU(rei_SummonDlg_VisiterInterface_Redraw):Px1;/i^rei_bottom_hero_id^;
+            !!el;
+                !!FU(rei_SummonDlg_GarrisonInterface_Redraw):Px1;
+            !!en;
+            !!FU(rei_SummonDlg_ResetClickedArmy):P;
+        !!el;
+            !!FU(rei_SummonDlg_GetArmy):P(isBottom:y)/?(army:y)/?(hero:y);
+            
+            // BLOCK TRANSFER FROM BOTTOM TO TOP
+
+            // if any of data isn't inited
+            !!if|i^rei_source_army^=(NULL)/i^rei_source_slot_id^=(NO_MON);
+                // store in globals
+                !!FU(rei_Army_GetMonAtSlot):P(army)/(armySlotId)/?(monId:y);
+
+                !!if&(monId)<>(NO_MON);
+                  !!VRi^rei_source_army^:S(army:y);
+                  !!VRi^rei_source_slot_id^:S(armySlotId:y);
+                  !!VRi^rei_dlg_last_army_slot_id_clicked^:S(armyClickSlotId:y);
+                  !!FU(rei_SummonDlg_SetDlgItemVisablity):P(REI_DLG_SELECTION_FRAME_ID)/(TRUE);
+                  !!VR(defFrameId:y):S(armyClickSlotId:y) *3 -2;// should be same as creature portrait dlgdef id
+                  !!FU(rei_DlgItem_PlaceAtItem):P(REI_DLG_SELECTION_FRAME_ID)/(defFrameId:y);
+                !!en;
+            !!el;
+                // otherwise try to exchange if not the same slot click
+                !!if|i^rei_source_army^<>(army)/i^rei_source_slot_id^<>(armySlotId:y);
+
+                    // get mon types 
+                    !!FU(rei_Army_GetMonAtSlot):Pi^rei_source_army^/i^rei_source_slot_id^/?(srcMonId:y) P(army)/(armySlotId)/?(dstMonId:y);
+                    !!VR(transferToHero:y):S(isBottom);
+                    !!VR(allowTransfer:y):S(FALSE);
+                    !!VR(lastStackTransferMessage:y):S(FALSE);
+                    !!if&i^rei_source_army^=(army);
+                        !!VR(allowTransfer:y):S(TRUE);
+                    !!el&(transferToHero);
+                        !!if|(dstMonId:y)=(srcMonId)/(dstMonId)=(NO_MON);
+                            !!VR(allowTransfer:y):S(TRUE);
+                        !!en;
+                        !!if&(allowTransfer:y)/i^rei_transfer_last_stack^=0/i^rei_top_hero_id^<>(NO_HERO);
+                            !!FU(rei_Army_GetStackCount):Pi^rei_source_army^/?(stacksNum:y);
+                            !!if&(stacksNum)<2;
+                                !!VR(lastStackTransferMessage:y):S(TRUE);
+                                !!VR(allowTransfer:y):S(FALSE);
+                            !!en;
+                        !!en;
+                    !!en;
+                    // only allow transfer into empty slot or inside the same army
+                    !!if&(allowTransfer:y);
+                        
+                        !!if&i^rei_source_army^<>(army);
+                          !!DLx1:E30721/0; // disable cansel button
+                          !!VRi^rei_dlg_army_was_trasnfered^:S(TRUE);
+                        !!en;
+
+                        // if not equal then call game internal function
+                        !!if&(srcMonId:y)<>(dstMonId:y);
+                            !!SN:E7705619/(CALLCONV_THISCALL)/i^rei_source_army^/i^rei_source_slot_id^/(army)/(armySlotId);
+                        !!el;
+
+                            // create merge of two armies
+                            !!SN:B?z2/?(townMgrBuffer:y) B?z3/?(garrisonSourceBuffer:y) B?z4/?(garrisonDestinationBuffer:y);
+                            !!UN:C(townMgrBuffer)/300/4/(garrisonSourceBuffer) C(townMgrBuffer)/304/4/i^rei_source_slot_id^ C(garrisonSourceBuffer)/108/4/i^rei_source_army^;
+                            !!UN:C(townMgrBuffer)/308/4/(garrisonDestinationBuffer) C(townMgrBuffer)/312/4/(armySlotId:y) C(garrisonDestinationBuffer)/108/4/(army);
+                            
+                            !#VA(patches[4]:y);
+                            !!UN:C7702728/1/-1/?(patches[0]) C7702742/1/-1/?(patches[1]) C7702753/1/-1/?(patches[2]) C7702767/1/-1/?(patches[3]);
+                            !!UN:C7702728/1/-1/129 C7702742/1/-1/129 C7702753/1/-1/129 C7702767/1/-1/129;
+                            !!SN:E7702722/(CALLCONV_THISCALL)/(townMgrBuffer); // WTF call __usercall with a __thiscall LMAO
+                            !!UN:C7702728/1/-1/(patches[0]) C7702742/1/-1/(patches[1]) C7702753/1/-1/(patches[2]) C7702767/1/-1/(patches[3]);
+                        
+                        !!en;
+                        !!FU(rei_SummonDlg_GarrisonInterface_Redraw):Px1;
+                        !!FU(rei_SummonDlg_VisiterInterface_Redraw):Px1;
+                    !!el;
+                        !!if&(lastStackTransferMessage:y);
+                            !!IF:M^%T(rei.dlg.error.lastStack)^;
+                        !!el;
+                            !!IF:M^%T(rei.dlg.error.wrongTarget)^;
+                        !!en;
+                    !!en;
+                    !!FU(rei_SummonDlg_SetDlgItemVisablity):P(REI_DLG_SELECTION_FRAME_ID)/(FALSE);
+
+
+                !!en;
+                !!FU(rei_SummonDlg_ResetClickedArmy):P;
+
+            !!en;
+
+        !!en;
+
+    !!el;
+        !!FU(rei_SummonDlg_ShowCreatureDlg):P(isBottom)/(armySlotId)/(TRUE);
+    !!en;
+!!en;
+
+
+!?FU(OnCustomDialogEvent)&x1=(REI_SUMMON_DLG_ID)/i^mouse_action^=(MOUSE_LMB_RELEASED)/i^mouse_item^>=30721/i^mouse_item^<=30722;/i^mouse_item^>=;
+!!DL:C1;
+
+
+
+!?FU(rei_BeforeTownPortal)&i^rei_in_town_cast^;
+    !!UN:Cx1/(STRUCT_HOOK_CONTEXT_EDI)/4/?i^rei_town_struct^;
+    !!SN:X?y99/0;
+    !!UN:Cx1/(STRUCT_HOOK_CONTEXT_RET)/4/4315797; // block original TP behaviour
+
+// reet cast at day start
+!?FU(OnEveryDay);
+!!re (heroId:y)/0/(HERO_LAST_WOG);
+    !!VRi^rei_summon_casted_by_hero_%(heroId:y)^:S(NULL);
+!!en;
+
+!?FU(rei_OnCastingDisguise)&i^timerIsHuman^; 0041C7BA
+    !!UN:Cx1/(STRUCT_HOOK_CONTEXT_EDI)/4/?(disguisePower:y);
+    !!UN:Cx1/(STRUCT_HOOK_CONTEXT_EDI)/4/-1; // block original mecnhanics
+    !!UN:Cx1/(STRUCT_HOOK_CONTEXT_ESI)/4/?(hero:y) C(hero)/26/4/?(heroId:y);
+    !!VR(skillLevel:y):S(disguisePower);
+
+    !!if&i^rei_summon_casted_by_hero_%(heroId:y)^>(disguisePower);
+        !!HE(heroId:y):B0/?(heroName:z);
+        !!VR(limit:y):S(disguisePower) +1;
+        !!SN:T^rei.spell.limit^/?(msg:z)/^heroName^/(heroName)/^limit^/(limit:y);
+        !!IF:M^%(msg:z)^;
+    !!el;
+        !!FU(rei_CastTownPortal):P(heroId:y)/(skillLevel:y)/?(resultTown:y);
+
+        !!if&(resultTown);
+
+            !!VR(dlgId:y):S(REI_SUMMON_DLG_ID);
+
+            !!FU(rei_SummonDlg_Init):P(dlgId)/(heroId:y)/(resultTown:y);
+            !!DL(dlgId):S; // show dlg
+            !!FU(rei_SummonDlg_ClearVariables):P?(armyWasTransfered:y);
+
+            // redraw map
+            !!UN:C(ADV_MANAGER)/4/?(advMgr:y) C6916624/4/?(showIt:y);
+
+            !!SN&(showIt:y):E4273904/(CALLCONV_THISCALL)/(advMgr:y)/1/1/0/0/0;
+
+
+            !!if&(armyWasTransfered:y);
+                !!VRi^rei_summon_casted_by_hero_%(heroId:y)^:+1; inrease counter
+                // return mana spending and else
+                !!UN:C(advMgr)/68/4/?(dlg:y);
+                !!SN:E4207968/(CALLCONV_THISCALL)/(dlg:y)/-1/1/1; redraw hero slots
+                !!UN:R(REDRAW_ADV_MAP);
+                // exit function to play sound and decrease mana
+                !!FU:E;
+            !!en;
+
+            // refresh screen
+            !!SN:D;
+        !!en;
+    !!en;
+
+    // jump over sounds and other stuff
+    !!SN:X?y99/0;
+    !!VR(returnAddress:y):S4311026;                         [set default return address as non sound and spell points decreased]
+    !!UN:Cx1/(STRUCT_HOOK_CONTEXT_RET)/4/(returnAddress:y); [block original disguise behaviour]
+
+
+
+
+!?FU(rei_CastTownPortal);
+!#VA(castingHeroId:x) (skillLevel:x) (result:x);
+    !!VR(result:x):S(NULL);
+
+    // set
+    !!HE(castingHeroId):O?(playerId:y);
+    !!OW:T(playerId)/?(oldTeam:y) T(playerId)/-1;
+
+
+    !!UN:C4314462/1/?(patch1:y);    [патч: сохраняем значения]
+    !!UN:C4315628/2/?(patch2:y);    [патч: сохраняем значения]
+
+    !!UN:C4314462/1/235;            [патч: временно убираем проверку на мувпоинты]
+    !!UN:C4315628/2/15851;          [патч: временно убираем стоимость мувов и маны]
+    !!UN:C6918840/4/?(advMgr:y);    [менеджер КП]
+
+    !!UN:R7/0/0 R5/0/0;             [включаем курсор мыши]  
+
+    !#VA(hero[8]:y) (x[8]:y) (y[8]:y) (z[8]:y);
+
+    !!OW:O(playerId)/?(heroesOnMap:y)/?(hero[0])/?(hero[1])/?(hero[2])/?(hero[3])/?(hero[4])/?(hero[5])/?(hero[6])/?(hero[7]);
+    
+    // hide heroes for the town portal spell
+    !!re i/0/(hero[SIZE])/1/-1;
+        !!if&(hero[i])<>(NO_HERO)/(hero[i])<>(castingHeroId);
+            !!HE(hero[i]):P?(x[i])/?(y[i])/?(z[i]);
+            !!HE(hero[i]):P-1/-1/-1/0;
+        !!en;
+    !!en;
+
+    // set new dlg graphics and text
+    !!SN:R^SpellScr.def:0_%(SPELL_TOWN_PORTAL).png^/^data/defs/SpellScr.def/0_%(REI_SUMMON_SPELL_ID).png^;
+    !!SN:H^spell^/(SPELL_TOWN_PORTAL)/(SPELL_TEXT_NAME)/?(originalSpellName:z) H^spell^/(SPELL_TOWN_PORTAL)/(SPELL_TEXT_NAME)/^%T(rei.dlg.select)^;
+
+    !!VRi^rei_in_town_cast^:S(TRUE);
+    !!SN:E4314336/2/(advMgr)/(skillLevel);     Run Town Portal 
+    !!VRi^rei_in_town_cast^:S(FALSE);
+
+    // restore spell picture and name
+    !!SN:R^SpellScr.def:0_%(SPELL_TOWN_PORTAL).png^/^^ H^spell^/(SPELL_TOWN_PORTAL)/(SPELL_TEXT_NAME)/(originalSpellName:z);
+    !!SN:R^SpellScr.def:0_%(SPELL_TOWN_PORTAL).png^/^^;
+
+    // restore heroes back
+    !!re i/0/(hero[SIZE])/1/-1;
+        !!if&(hero[i])<>(NO_HERO)/(hero[i])<>(castingHeroId);
+             !!HE(hero[i]):P(x[i])/(y[i])/(z[i])/0;   
+        !!en;
+    !!en;
+
+    !!OW:T(playerId)/(oldTeam); restore team
+
+
+    !!UN:C4314462/1/(patch1);       [патч: возвращаем проверку на мувпоинты]
+    !!UN:C4315628/2/(patch2);       [патч: возвращаем параметры стоимости мувов и маны]
+    !!UN:C(WND_MANAGER)/4/?(wndMan:y) C(wndMan)/56/4/?(resultItemId:x);
+    !!if&(resultItemId)<>(DLG_RESULT_CANCEL);
+      !!VR(result:x):Si^rei_town_struct^;
+      !!VRi^rei_town_struct^:S(NULL);
+    !!en;
+
+*?FU(OnKeyPressed_AdvMap)&x1=(KEY_Q)/999;
+
+*!UN:C(ADV_MANAGER)/4/?(advMgr:y);
+*!SN:E4310544/(CALLCONV_THISCALL)/(advMgr)/(SPELL_DISGUISE);
+

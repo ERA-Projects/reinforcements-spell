@@ -1,0 +1,233 @@
+ZVSE2
+
+
+!?FU(rei_GetTownArmyData);
+!#VA(townId:x) (arrayId:x);
+    !!CA0/(townId):P?(x:y)/?(y:y)/?(z:y);
+    !!re i/0/(ARMY_SLOT_LAST);
+        !!VR(dataIndex:y):Si *3;
+        !!CA0/(townId):M2/i/?(mon:y)/?(qty:y);
+        !!EX(x:y)/(y:y)/(z:y)/i/2:E?(exp:y);
+        !!if&(exp);
+          !!SN:E7503648/(CALLCONV_CDECL)/(mon)/(exp);
+          !!VR(exp:y):Sv1;
+        !!en;
+        !!SN:V(arrayId)/(dataIndex)/(mon:y)/(qty)/(exp);
+    !!en;
+
+!?FU(rei_GetHeroArmyData);
+!#VA(heroId:x) (arrayId:x);
+    !!re i/0/(ARMY_SLOT_LAST);
+        !!VR(dataIndex:y):Si *3;
+        !!HE(heroId):C0/i/?(mon:y)/?(qty:y)/?(exp:y)/12;
+        !!SN:V(arrayId)/(dataIndex)/(mon:y)/(qty)/(exp);
+    !!en;
+
+
+
+!?FU(rei_SummonDlg_VisiterInterface_Redraw);
+!#VA(dlgId:x);
+    !!VR(heroId:y):Si^rei_bottom_hero_id^;
+    !!FU(NewIntArray):P(REI_DLG_TOP_ARMY_DLG_ITEMS_AMOUNT)/?(armyData:y);                                          [create an array]
+    !!FU(rei_GetHeroArmyData):P(heroId)/(armyData);                                                                [and pass into heroes data]
+    !!FU(rei_SummonDlg_SetCreatures):P(dlgId)/(REI_DLG_BOTTOM_ARMY_DLG_ITEM_ID_FIRST)/(armyData);
+    !!FU(rei_SummonDlg_SetHeroPortrait):P(dlgId)/(REI_DLG_BOTTOM_HERO_PCX_ITEM_ID)/(heroId);
+
+
+!?FU(rei_SummonDlg_GarrisonInterface_Redraw);
+!#VA(dlgId:x);
+    !!FU(NewIntArray):P(REI_DLG_TOP_ARMY_DLG_ITEMS_AMOUNT)/?(armyData:y); [create an array]
+
+    !!VR(garrisonHeroId:y):Si^rei_top_hero_id^;
+    !!if&(garrisonHeroId)<>(NO_HERO);
+        !!FU(rei_GetHeroArmyData):P(garrisonHeroId)/(armyData);               [and pass into heroes data]
+        !!FU(rei_SummonDlg_SetHeroPortrait):P(dlgId)/(REI_DLG_TOP_HERO_PCX_ITEM_ID)/(garrisonHeroId);
+    !!el;
+        !!FU(rei_GetTownArmyData):Pi^rei_town_id^/(armyData);                   [and pass into heroes data]
+    !!en;
+
+    !!FU(rei_SummonDlg_SetCreatures):P(dlgId)/(REI_DLG_TOP_ARMY_DLG_ITEM_ID_FIRST)/(armyData);
+
+
+!?FU(rei_SummonDlg_ResetClickedArmy);
+    !!VRi^rei_source_army^:S(NULL);
+    !!VRi^rei_source_slot_id^:S(NO_MON);
+    !!VRi^rei_dlg_last_army_slot_id_clicked^:S-1;
+    !!FU(rei_SummonDlg_SetDlgItemVisablity):P(REI_DLG_SELECTION_FRAME_ID)/(FALSE)/(TRUE);
+
+
+!?FU(rei_SummonDlg_SetDlgItemVisablity);
+!#VA(itemId:x) (visability:x) (deactivate:x);
+
+    !!if&(visability:x);
+        !!DL(REI_SUMMON_DLG_ID):A(itemId)/5/6/1;
+    !!el;
+        !!if&(deactivate);
+            !!DL(REI_SUMMON_DLG_ID):A(itemId)/6/6/1;
+        !!el;
+            !!DL(REI_SUMMON_DLG_ID):A(itemId)/6/4/1;
+        !!en;
+    !!en;
+
+!?FU(rei_SummonDlg_SetCreatures);
+!#VA(dlgId:x) (startingItemId:x) (dataArray:x);
+// set creatures
+    !!re i/0/(ARMY_SLOT_LAST);
+        !!VR(dataIndex:y):Si *3;
+        !!SN:V(dataArray)/(dataIndex)/?(mon:y)/?(qty:y)/?(exp:y);/?(creatureId:y);
+
+        !!VR(monNumText:z):S^^;
+        !!VR(monExpFrameId:y):S0;
+        !!VR(defFrameId:y):S(mon) +2;
+        !!VR(dlgDefId:y):S(dataIndex:y) +(startingItemId);
+        !!VR(dlgTextIdNum:y):S(dlgDefId) +1;
+        !!VR(dlgDefIdExp:y):S(dlgTextIdNum) +1;
+
+        !!VR(isVisible:y):S(FALSE);
+
+        !!if&(mon)<>(NO_MON);
+            !!VR(monNumText:z):S^%(qty)^;
+            !!VR(monExpFrameId:y)&(exp):S(exp) F0/10;
+            !!VR(isVisible:y):S(TRUE);
+        !!en;
+
+        !!FU(rei_SummonDlg_SetDlgItemVisablity):P(dlgDefId:y)/(isVisible) P(dlgTextIdNum:y)/(isVisible) P(dlgDefIdExp:y)/(isVisible);
+
+        // if item is visible display data
+        !!if&(isVisible:y);
+            !!DL(dlgId):A(dlgDefId)/(DLG_CMD_SET_DEF_FRAME)/(defFrameId)/0;
+            !!DL(dlgId):A(dlgTextIdNum)/(DLG_CMD_SET_TEXT)/(monNumText)/0;  
+            !!DL(dlgId):A(dlgDefIdExp)/(DLG_CMD_SET_DEF_FRAME)/(monExpFrameId)/0;  
+        !!en;
+    !!en;
+
+// set hero picture at slot
+!?FU(rei_SummonDlg_SetHeroPortrait);
+!#VA(dlgId:x) (itemId:x) (heroId:x);
+    !!VR(nameAddrPtr:y):S(heroId)* 92 +8144112;
+    !!UN:C(nameAddrPtr)/4/4/?(nameAddr:y);
+    !!SN:B(nameAddr:y)/d/?(portaitName:z);
+    !!DL(dlgId):A(itemId)/(DLG_CMD_SET_PCX)/(portaitName:z)/0;
+
+
+
+
+!?FU(rei_SummonDlg_ShowCreatureDlg);
+!#VA(isBottom:x) (slotId:x) (isRmc:x);
+    !!FU(rei_SummonDlg_GetArmy):P(isBottom)/?(army:y)/?(hero:y);
+    !!FU(rei_Army_GetMonAtSlot):P(army)/(slotId)/?(monId:y);
+
+    !!if&(monId)<>(NO_MON);
+        !!VR(addDelete:y):S(isRmc) B X1;
+        !!if&(addDelete:y)/i^rei_transfer_last_stack^=(FALSE);
+            !!FU(rei_Army_GetStackCount):P(army)/?(stacsNum:y);
+            !!if&(stacsNum)<2;
+              !!VR(addDelete):S(FALSE);
+            !!en;
+        !!en;
+        !!VR(town:y):Si^rei_town_struct^;
+        !!if&(isBottom);
+          !!VR(town:y):S(NULL);
+        !!en;
+        !!UN:C(GAME_MANAGER)/4/?(gameMgr:y);
+        !!SN:E5007632/(CALLCONV_THISCALL)/(gameMgr)/(army)/(slotId)/(hero)/(town)/110/20/(addDelete:y)/(isRmc:x);
+    !!en;
+
+
+// clears all global vars
+!?FU(rei_SummonDlg_ClearVariables);
+!#VA(result:x);
+    !!VR(result:x):Si^rei_dlg_army_was_trasnfered^;
+    !!VRi^rei_summon_dlg_ptr^:S(NULL);
+    !!VRi^rei_bottom_hero_id^:S(NULL);
+    !!VRi^rei_top_hero_id^:S(NULL);
+    !!VRi^rei_town_id^:S(NULL);
+    !!VRi^rei_town_struct^:S(NULL);
+    !!VRi^rei_source_army^:S(NULL);
+    !!VRi^rei_source_slot_id^:S(NULL);
+    !!VRi^rei_dlg_last_army_slot_id_clicked^:S(NULL);
+    !!VRi^rei_dlg_army_was_trasnfered^:S(NULL);
+
+
+!?FU(rei_DlgItem_PlaceAtItem);
+!#VA(itemId:x) (dstItemId:x);
+    !!FU(rei_DlgItem_Position):P(dstItemId:x)/?(x:y)/?(y:y) P(itemId:x)/(x:y)/(y:y);/(redraw:x);
+
+!?FU(rei_DlgItem_Position);
+!#VA(itemId:x) (xPos:x) (yPos:x);
+    !!FU:A?(argNum:y);
+    !!if|(itemId)<0/(argNum)<=(@itemId);
+      !!IF:M^itemId is incorrect!
+      should be 0 and higher^;
+      !!FU:E;
+    !!en;
+
+    !!VR(savedV1:y):Sv1;
+
+    !!FU(H3Dlg_GetCurrentDlg):P?(dlgStruct:y);
+    !!SN:E6288816/2/(dlgStruct)/(itemId);
+    !!if&v1<1;
+      !!VR(xPos):S-1;
+      !!VR(yPos):S-1;
+
+      !!VRv1:S(savedV1);
+      *!IF:M^itemId is incorrect!^;
+      !!FU:E;
+    !!en;
+    !!VR(itemStructure:y):Sv1; [getItemStruture] item = (_Dlg_*)->GetItem(id)
+
+    !!FU:S(@xPos)/?(xSyntax:y);
+
+    !!VR(itemAction:y):S(itemStructure) +24;
+    !!if&(xSyntax)=(ARG_SYNTAX_GET);
+      !!UN:C(itemAction)/2/?(xPos);
+    !!el&(xSyntax)=(ARG_SYNTAX_SET);
+      !!UN:C(itemAction)/2/(xPos);
+    !!en;
+
+    !!FU&(argNum)<(@yPos):E;
+    !!FU:S(@yPos)/?(ySyntax:y);
+
+    !!VR(itemAction:y):S(itemStructure) +26;
+    !!if&(ySyntax)=(ARG_SYNTAX_GET);
+      !!UN:C(itemAction)/2/?(yPos);
+    !!el&(ySyntax)=(ARG_SYNTAX_SET);
+      !!UN:C(itemAction)/2/(yPos);
+    !!el;
+      !!UN:C(itemAction)/2/?(currY:y);
+      !!VR(yPos):+(currY);
+      !!UN:C(itemAction)/2/(yPos);    
+    !!en;
+
+
+    !!VRv1:S(savedV1);
+
+// Army Fucntion
+
+!?FU(rei_SummonDlg_GetArmy);
+!#VA(isBottom:x) (army:x) (hero:x);
+    !!if&(isBottom);
+        !!HEi^rei_bottom_hero_id^:Z?(hero);
+        !!VR(army):S(hero) +145;
+    !!el;
+        !!VR(town:y):Si^rei_town_struct^;
+        !!UN:C(town)/12/4/?(heroId:y);
+        !!if&(heroId)<>(NO_HERO);
+            !!HE(heroId):Z?(hero);
+            !!VR(army):S(hero) +145;
+        !!el;
+            !!VR(army):S(town) +224;
+        !!en;
+    !!en;
+
+// Get stack quantity to decide transfer last one or note
+!?FU(rei_Army_GetStackCount);
+!#VA(army:x) (result:x);
+    !!SN:E4499856/(CALLCONV_THISCALL)/(army);
+    !!VR(result:x):Sv1;
+
+!?FU(rei_Army_GetMonAtSlot);
+!#VA(army:x) (slotId:x) (monId:x);
+    !!VR(slotOffset:y):S(slotId) *4;
+    !!UN:C(army)/(slotOffset)/4/?(monId);
+

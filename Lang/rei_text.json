@@ -1,0 +1,26 @@
+{
+	"rei": {
+		"dlg": {
+			"header": "Garrisson of the @townName@ town",
+			"text": "Reinforcements",
+			"select": "Open gates for Reinforcements",
+			"error": {
+				"lastStack": "You can't transfer last stack.",
+				"wrongTarget": "You can only summon creatures from the town."
+			}
+		},
+		"spell": {
+			"name": {
+				"short": "Reinforcements",
+				"full": "Reinforcements"
+			},
+			"description": {
+				"0": "{Reinforcements}\n\nHero can summon creatures from the closest town garrison once per day.",
+				"1": "{Basic Reinforcements}\n\nHero can summon creatures from the closest town garrison up to 2 times per day.",
+				"2": "{Advanced Reinforcements}\n\nHero can summon creatures from any town garrison up to 3 times per day.",
+				"3": "{Expert Reinforcements}\n\nHero can summon creatures from any town garrison up to 4 times per day."
+			},
+			"limit": "@heroName@ has reached the spell limit of @limit@ cast/ day"
+		}
+	}
+}
