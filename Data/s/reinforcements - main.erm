@@ -325,7 +325,7 @@ ZVSE2
     !!UN:C(address)/(UNC_INT)/?(txtPtr:y);                         [get txt]
     !!UN:C(txtPtr)/32/4/?(firstLinePtr:y);                         [get first item address from H3Vector<LPCSTR> (0x1C + 0x4) text;]
     !!VR(lineOffset:y):S4 *(rowIndex);                             [get our line offset]
-    !!SN:F^trStatic^/^rei.dlg.select^;
+    !!SN:F^trStatic^/^rei.dlg.text^;
     !!VR(staticStrPtr:y):Sv1;
     !!UN:C(firstLinePtr)/(lineOffset)/(UNC_INT)/?(nativeStrPtr:y); [store original pointer]
     !!UN:C(firstLinePtr)/(lineOffset)/(UNC_INT)/(staticStrPtr:y);      [set own text pointer]
