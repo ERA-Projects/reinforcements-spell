@@ -262,11 +262,11 @@ ZVSE2
 
 
             !!if&(armyWasTransfered:y);
-                !!VRi^rei_summon_casted_by_hero_%(heroId:y)^:+1; inrease counter
+                !!VRi^rei_summon_casted_by_hero_%(heroId:y)^:+1;  [inrease counter]
                 // return mana spending and else
                 !!UN:C(advMgr)/68/4/?(dlg:y);
-                !!SN:E4207968/(CALLCONV_THISCALL)/(dlg:y)/-1/1/1; redraw hero slots
-                !!UN:R(REDRAW_ADV_MAP);
+                !!SN:E4207968/(CALLCONV_THISCALL)/(dlg:y)/-1/1/1; [redraw hero slots]
+                !!UN:R1;                                          [(REDRAW_ADV_MAP) -- from ws mod so removed;]
                 // exit function to play sound and decrease mana
                 !!FU:E;
             !!en;
