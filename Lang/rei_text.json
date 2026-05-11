@@ -20,7 +20,8 @@
 				"2": "{Advanced Reinforcements}\n\nHero can summon creatures from any town garrison up to 3 times per day.",
 				"3": "{Expert Reinforcements}\n\nHero can summon creatures from any town garrison up to 4 times per day."
 			},
-			"limit": "@heroName@ has reached the spell limit of @limit@ cast/ day"
+			"limit": "@heroName@ has reached the spell limit of @limit@ cast/ day",
+			"mp": "Your hero is too tired to cast the spell today. Try again tomorrow."
 		}
 	}
 }

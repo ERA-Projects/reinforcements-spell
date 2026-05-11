@@ -239,13 +239,19 @@ ZVSE2
     !!UN:Cx1/(STRUCT_HOOK_CONTEXT_ESI)/4/?(hero:y) C(hero)/26/4/?(heroId:y);
     !!VR(skillLevel:y):S(disguisePower);
 
-    !!if&i^rei_summon_casted_by_hero_%(heroId:y)^>(disguisePower);
+    !!HE(heroId:y):W?(movementPoints:y);        /simi
+    !!if&(skillLevel)<3/(movementPoints)<300;
+        !!IF:M^%T(rei.spell.mp)^;
+    !!el&(skillLevel)=3/(movementPoints)<200;
+        !!IF:M^%T(rei.spell.mp)^;
+    !!el&i^rei_summon_casted_by_hero_%(heroId:y)^>(disguisePower);
         !!HE(heroId:y):B0/?(heroName:z);
         !!VR(limit:y):S(disguisePower) +1;
         !!SN:T^rei.spell.limit^/?(msg:z)/^heroName^/(heroName)/^limit^/(limit:y);
         !!IF:M^%(msg:z)^;
     !!el;
         !!FU(rei_CastTownPortal):P(heroId:y)/(skillLevel:y)/?(resultTown:y);
+        !!VR(movement:y):S5-(skillLevel) F2/3 *100;     /simi
 
         !!if&(resultTown);
 
@@ -268,6 +274,7 @@ ZVSE2
                 !!SN:E4207968/(CALLCONV_THISCALL)/(dlg:y)/-1/1/1; [redraw hero slots]
                 !!UN:R1;                                          [(REDRAW_ADV_MAP) -- from ws mod so removed;]
                 // exit function to play sound and decrease mana
+                !!HE(heroId):Wd-(movement);         /simi
                 !!FU:E;
             !!en;
 
